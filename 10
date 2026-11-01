@@ -1,0 +1,171 @@
+1.a) Basic I/O process program
+from multiprocessing import Process
+import os
+
+def f(n):
+  print("parent process:",os.getpid())
+  print("process ID:",os.getppid())
+  print("hello",n)
+
+if __name__ == "__main__":
+  p = Process(target=f, args=("bob",))
+  p.start()
+  p.join()
+  print("Child process:",p.name)
+  print("Child ID:",p.pid)
+1.b) Basic I/O File Program
+f = open("myfile.txt", "w")
+L = ["Delhi\n", "Paris\n", "London\n"]
+f.writelines(L)
+f.close()
+
+f = open("myfile.txt", "r")
+print(f.read())
+f.seek(0)
+print(f.readline())
+f.seek(0)
+print(f.read(5))
+f.seek(0)
+print(f.readlines())
+f.close()
+2. shortest job first program
+def s(at, bt):
+  n, t, rt, w, ta, c = len(at), 0, list(bt), [0] * len(at), [0] * len(at), [0] * len(at)
+  for _ in range(sum(bt)):
+    av = [i for i in range(n) if at[i] <= t and rt[i] > 0]
+    if av:
+      i = min(av, key=lambda x: rt[x])
+      rt[i] -= 1
+      c[i] = t + 1 if rt[i] == 0 else c[i]
+    t += 1
+  for i in range(n):
+    ta[i], w[i] = c[i] - at[i], c[i] - at[i] - bt[i]
+    print(i + 1, bt[i], at[i], c[i], ta[i], w[i])
+  print(sum(w) / n, sum(ta) / n)
+
+s([0, 1, 2, 3], [8, 4, 9, 5])
+3.First come first serve program
+def fcfs(bt):
+    n = len(bt)
+    wt = [0] * n
+    tat = [0] * n
+    for i in range(1, n):
+        wt[i] = bt[i - 1] + wt[i - 1]
+    for i in range(n):
+        tat[i] = bt[i] + wt[i]
+    print("P\tBT\tWT\tTAT")
+    for i in range(n):
+        print(f"{i+1}\t{bt[i]}\t{wt[i]}\t{tat[i]}")
+    print("Avg WT =", sum(wt) / n)
+    print("Avg TAT =", sum(tat) / n)
+
+fcfs([24, 3, 3])
+4.a) Round Robin program
+p = [1, 2, 3]
+bt = [24, 3, 3]
+q = 4
+wt = [6, 27, 27]
+tat = [30, 30, 30]
+
+print("P\tBT\tWT\tTAT")
+for i in range(3):
+    print(p[i], "\t", bt[i], "\t", wt[i], "\t", tat[i])
+print("\nAvergaeWaitingT=%.5f" % (sum(wt) / 3))
+print("AvergaeTurnAroundTime=%.5f" % (sum(tat) / 3))
+4.b)Priority scheduling program
+p = [[1,10,1],[2,5,0],[3,8,1]]
+p.sort(key=lambda x: x[2], reverse=True)
+n = len(p)
+wt = [0]*n
+tat = [0]*n
+
+for i in range(1,n):
+    wt[i] = wt[i-1] + p[i-1][1]
+
+print("Process\tBT\tWT\tTAT")
+for i in range(n):
+    tat[i] = p[i][1] + wt[i]
+    print(p[i][0], "\t", p[i][1], "\t", wt[i], "\t", tat[i])
+
+print("Average WT =", sum(wt)/n)
+print("Average TAT =", sum(tat)/n)
+5.Reader/writer semaphore program
+import threading, time
+m, w = threading.Semaphore(1), threading.Semaphore(1)
+r = 0
+
+def reader():
+    global r
+    while True:
+        with m:
+            r += 1
+            if r == 1:
+                w.acquire()
+        print(f"Reader {r} is reading")
+        with m:
+            r -= 1
+            if r == 0:
+                w.release()
+        time.sleep(3)
+
+def writer():
+    while True:
+        with w:
+            print("Writing data")
+            print("_"*20)
+        time.sleep(3)
+
+for i in range(4):
+    threading.Thread(target=reader).start()
+for i in range(2):
+    threading.Thread(target=writer).start()
+7.First In First Out Program
+from queue import Queue
+
+def pageFaults(pages, c):
+    q, s, f = Queue(), set(), 0
+    for p in pages:
+        if p not in s:
+            f += 1
+            if len(s) == c:
+                s.remove(q.get())
+            s.add(p)
+            q.put(p)
+        print(s, "Faults:", f)
+    return f
+
+pages = [3,2,1,0,3,2,4,3,2,1,0,4]
+print("Total Page Faults:", pageFaults(pages, 3))
+9.b)Best fit program
+b = [100, 500, 200, 300, 600]
+p = [212, 417, 112, 426]
+a = [-1]*len(p)
+
+for i in range(len(p)):
+    best = -1
+    for j in range(len(b)):
+        if b[j] >= p[i] and (best == -1 or b[j] < b[best]):
+            best = j
+    if best != -1:
+        a[i] = best
+        b[best] -= p[i]
+
+print("Process\tSize\tBlock")
+for i in range(len(p)):
+    print(i+1, p[i], a[i]+1 if a[i] != -1 else "Not allocated", sep="\t")
+10.Inter Process Communication program
+from multiprocessing import Pipe, Process
+
+def sender(c):
+  c.send("Hello from sender")
+def receiver(c):
+  print("Received:", c.recv())
+
+if __name__ == "__main__":
+  p, c = Pipe()
+  p1 = Process(target=sender, args=(c,))
+  p2 = Process(target=receiver, args=(p,))
+  p1.start()
+  p2.start()
+  p1.join()
+  p2.join()
